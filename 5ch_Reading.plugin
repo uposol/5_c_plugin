@@ -1,0 +1,22 @@
+#!name = 5ch 阅读优化
+#!desc = 裸 itest 帖子跳转 /l-；移除大写乱码、超过 5 次的重复正文及正文含 ◆ 的跟帖。需要 MitM。
+#!author = uposol
+#!homepage = https://github.com/uposol/5_c_plugin
+#!loon_version = 3.5.2(1005)
+#!tag = 网页优化,5ch
+#!type = normal
+# Adapted from supplied 5ch userscripts v1.0.0 and v1.8.0; 2026-10-02.
+
+[Argument]
+force_latest = switch,true,tag=跳转 l- 页面,desc=仅将 itest 裸帖子地址跳到 /l-，保留查询参数和已有范围
+filter_spam = switch,true,tag=移除乱码和重复帖,desc=大写乱码及同页超过 5 次的相同正文整组移除
+block_symbol = switch,true,tag=移除正文含 ◆ 的帖子,desc=沿用原脚本规则，只检查帖子正文
+
+[Rewrite]
+request if ${force_latest} == true && ${request.method} == "GET" && ${url} ~= /^https:\/\/itest\.5ch\.io(\/[^\/?#]+\/test\/read\.cgi\/[^\/?#]+\/[0-9]+)\/?((?:\?[^#]*)?)$/i as thread then redirect(302, "https://itest.5ch.io${thread.1}/l-${thread.2}")
+
+[Script]
+response if ${url} ~= /^https:\/\/(?:itest\.5ch\.io\/[^\/?#]+|(?:[a-z0-9-]+\.)+5ch\.io)\/test\/read\.cgi\/[^\/?#]+\/[0-9]+(?:\/[^?#]*)?(?:\?[^#]*)?$/i && ${response.status} == 200 && ${response.header['Content-Type']} ~= /^text\/html(?:\s*;|$)/i && (${filter_spam} == true || ${block_symbol} == true) then script("https://raw.githubusercontent.com/uposol/5_c_plugin/main/5ch_Reading.response.js", {${force_latest}, ${filter_spam}, ${block_symbol}}) with tag="5ch 阅读优化", timeout=10, requires_body=true
+
+[Mitm]
+hostname = itest.5ch.io,*.5ch.io
