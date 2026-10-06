@@ -17,7 +17,8 @@ remove_ads = switch,true,tag=移除 5ch 广告,desc=清理列表插页、楼层�
 [Rewrite]
 request if ${force_latest} == true && ${request.method} == "GET" && ${url} ~= /^https:\/\/itest\.5ch\.io(\/[^\/?#]+\/test\/read\.cgi\/[^\/?#]+\/[0-9]+)\/?((?:\?[^#]*)?)$/i as thread then redirect(302, "https://itest.5ch.io${thread.1}/l-${thread.2}")
 
-request if ${remove_ads} == true && ${url} ~= /^https:\/\/itest\.5ch\.io\/(?:kn\/widget\?|ads\.json(?:\?|$)|assets\/(?:css\/ads\.css(?:\?|$)|js\/ad-manager-5ch\.js(?:\?|$)|img\/[^?#]*-300x250\.png(?:\?|$)))/i then reject(200)
+# Keep ads.css: it also positions the reply-card contents below the fixed header.
+request if ${remove_ads} == true && ${url} ~= /^https:\/\/itest\.5ch\.io\/(?:kn\/widget\?|ads\.json(?:\?|$)|assets\/(?:js\/ad-manager-5ch\.js(?:\?|$)|img\/[^?#]*-300x250\.png(?:\?|$)))/i then reject(200)
 
 [Script]
 response if ${url} ~= /^https:\/\/(?:itest\.5ch\.io\/subback\/[^\/?#]+(?:\/[^?#]*)?|(?:itest\.5ch\.io\/[^\/?#]+|(?:[a-z0-9-]+\.)+5ch\.io)\/test\/read\.cgi\/[^\/?#]+\/[0-9]+(?:\/[^?#]*)?)(?:\?[^#]*)?$/i && ${response.status} == 200 && ${response.header['Content-Type']} ~= /^text\/html(?:\s*;|$)/i && (${filter_spam} == true || ${block_symbol} == true || ${remove_ads} == true) then script("https://raw.githubusercontent.com/uposol/5_c_plugin/main/5ch_Reading.response.js", {${force_latest}, ${filter_spam}, ${block_symbol}, ${remove_ads}}) with tag="5ch 阅读优化", timeout=10, requires_body=true
